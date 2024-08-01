@@ -1,9 +1,14 @@
-<script setup>
-import TheWelcome from '../components/TheWelcome.vue'
-</script>
-
 <template>
-  <main>
-    <TheWelcome />
-  </main>
+	<div>
+		<AppHeader />
+	</div>
 </template>
+
+<script>
+import AppHeader from '../components/AppHeader.vue'
+export default {
+	components: {
+		AppHeader,
+	}
+}
+</script>
