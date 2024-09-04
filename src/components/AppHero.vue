@@ -1,29 +1,95 @@
 <template>
-	<section class="relative bg-cover bg-center h-screen flex items-center justify center" :style="backgroundStyle">
-		<div class="absolute inset-0 bg-black opacity-40">
-			<div class="relative z-10 text-center text-white max-w-3xl px-4">
-				<h1 class="text-4xl font-bold p-2 capitalize mb-6">
+	<section class="relative bg-cover bg-center h-screen">
+		<div class="absolute inset-0 bg-black opacity-100">
+			<div class="relative z-10 flex flex-col items-center justify-center h-full text-white" :style="{ backgroundImage: `url(${backgroundImage})` }">
+				<h1 class="text-4xl font-bold capitalize p-2 mb-4">
 					navigate the roads with comfort
 				</h1>
-				<form action=""
-					class="flex flex-col md:flex-row bg-green-300 justify-evenly items-center space-y-4 md:space-y-0 md:space-x-4">
-					<div class="flex items-center bg-white p-2 rounded-md shadow-md">
+				<form submit.prevent="handleSearch" action=""
+					class="w-4/5 p-6 my-8 mx-auto bg-white bg-opacity-80 rounded-lg shadow-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
+					<div class="cols-span-2">
+						<label for="from" class="block text-gray-700 capitalize font-semibold mb-2">
+							from
+						</label>
 						<!-- <box-icon name='current-location' class="w-8 h-8 text-red-400"></box-icon> -->
-						<input type="text" placeholder="From" class="flex-1 p-2 text-gray-700 rounded-l-md">
+						<input type="text" placeholder="Departure city" id="locationFrom"
+							v-model="form.locationFrom"
+							class="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring focus:ring-gray-100">
 					</div>
-
-					<div class="flex items-center bg-white p-2 rounded-md shadow-md">
+					<div class="cols-span-2">
+						<label for="to" class="block text-gray-700 capitalize font-semibold mb-2">
+							to
+						</label>
 						<!-- <box-icon class="w-8 h-8" name='current-location'></box-icon> -->
-						<input type="text" placeholder="To" class="flex-1 p-2 text-gray-700 rounded-l-md">
+						<input type="text" placeholder="Destination city" id="locationTo"
+							v-model="form.locationTo"
+							class="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring focus:ring-gray-100">
 					</div>
 
-					<div class="flex items-center bg-white p-2 rounded-md shadow-md">
-						<input type="date" placeholder="To" class="flex-1 p-2 text-gray-700 rounded-l-md">
+					<div class="col-span-1">
+						<label for="departure-date" class="block text-gray-700 capitalize font-semibold mb-2">
+							when
+						</label>
+						<input type="date" id="departureDate" v-model="form.departureDate"
+							class="w-full px-4 py-2 rounded-md border border-gray-100 focus:ring focus:ring-gray-100 text-black" />
 					</div>
 
-					<button class="bg-gray-300 text-white capitalize px-4 py-2 rounded-md shadow-md">
-						search
-					</button>
+					<div class="col-span-1 relative w-full">
+						<label for="passengers" class="block text-gray-700 font-semibold capitalize mb-2">
+							passengers
+						</label>
+						<div @click="toggleDropdown"
+							class="w-full px-4 py-2 rounded-md flex flex-col items-start justify-center border border-white focus:ring focus:ring-blue-500 cursor-pointer text-black">
+							<span>
+								{{ form.passengerCount.adults }} Adults,
+							</span>
+
+							<span>
+								{{ form.passengerCount.children }} Children
+							</span>
+						</div>
+						<div v-if="dropdownOpen"
+							class="absolute left-0 mt-2 w-full bg-white border border-gray-300 rounded-md shadow-lg z-20">
+							<div class="p-3 flex flex-col items-center justify-center">
+								<label for="adults" class="block text-gray-700 font-semibold capitalize">
+									adults
+								</label>
+								<input type="number" id="adults" v-model="form.passengerCount.adults" min="1" max="10"
+									class="md:w-full w-2/5 p-2 mt-1 rounded-md border border-gray-300 text-black" />
+							</div>
+							<div class="p-3 flex flex-col items-center justify-center">
+								<label for="children" class="block text-gray-700 font-semibold capitalize">
+									children
+								</label>
+								<input type="number" id="children" v-model="form.passengerCount.children" min="0"
+									max="10" class=" md:w-full w-2/5 p-2 mt-1 rounded-md border border-gray-300 text-black" />
+							</div>
+						</div>
+					</div>
+
+					<div class="col-span-1 flex items-center">
+						<label for="round-trip" class="flex text-gray-700 font-semibold mr-3 capitalize">
+							round trip?
+						</label>
+						<!-- <input type="checkbox" id="isRoundTrip" v-model="form.isRoundTrip"
+							class="w-4 h-4 rounded-md border border-gray-300 focus:ring focus:ring-blue-200" /> -->
+
+						<select name="" id="" class="px-2 py-1 rounded-md border border-gray-300 focus:ring focus:ring-blue-200 capitalize">
+							<option value="0" class="">
+								Yes
+							</option>
+							<option value="1" class="">
+								No
+							</option>
+						</select>
+					</div>
+
+					<div class="col-span-1 lg:col-span-2 flex">
+						<button type="submit"
+							class="justify-center items-center w-full bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition capitalize">
+							search
+						</button>
+					</div>
 				</form>
 			</div>
 		</div>
@@ -32,59 +98,43 @@
 
 <script>
 
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 
 export default {
 	name: 'AppHero',
 	setup() {
-		const backgroundImage = ref('../assets/images/hero.webp');
-		const backgroundStyle = ref({
-			backgroundImage: `url(${backgroundImage.value})`
-		});
+		const backgroundImage = '../assets/images/hero.webp';
 
-		const isRoundTrip = ref(true);
-		const adultCount = ref(1);
-		const childrenCount = ref(1);
+		const form = ref({
+			from: '',
+			to: '',
+			departureDate: '',
+			isRoundTrip: false,
+			passengerCount: {
+				adults: 1,
+				children: 0,
+			},
 
+		})
 
-		const totalPassengers = computed(() => adultCount.value + childrenCount.value);
+		const dropdownOpen = ref(false);
 
-		const toggleRoundTrip = () => {
-			isRoundTrip.value = !isRoundTrip.value
+		const handleSearch = () => {
+			// handle search form submission
+			console.log('Form submitted:', form.value)
 		}
 
-		const incrementAdults = () => {
-			adultCount.value += 1
-		}
-
-		const incrementChildren = () => {
-			childrenCount.value += 1
-		}
-
-		const decrementAdults = () => {
-			if (adultCount.value > 1) {
-				adultCount.value -= 1
-			}
-		}
-
-		const decrementChildren = () => {
-			if (childrenCount.value > 0) {
-				childrenCount.value -= 1
-			}
-		}
+		const toggleDropdown = () => {
+			dropdownOpen.value = !dropdownOpen.value;
+		};
 
 		return {
-			backgroundStyle,
-			isRoundTrip,
-			toggleRoundTrip,
-			adultCount,
-			incrementAdults,
-			decrementAdults,
-			childrenCount,
-			incrementChildren,
-			decrementChildren,
-			totalPassengers
-		};
+			backgroundImage,
+			form,
+			dropdownOpen,
+			handleSearch,
+			toggleDropdown,
+		};		
 	}
 }
 

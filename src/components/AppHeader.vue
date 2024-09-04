@@ -2,9 +2,9 @@
 	<header class="bg-white shadow-md">
 		<div class="container mx-auto flex justify-between items-center p-4">
 			<div class="flex items-center">
-				<img src="/bus.svg" alt="mash poa" class="w-8 h-8 mr-2" />
+				<img src="/bus.svg" alt="autobus-logo" class="w-8 h-8 mr-2" />
 				<span class="capitalize font-semibold">
-					mash poa
+					autobus
 				</span>
 
 				<nav class="hidden md:flex space-x-6 ml-8 capitalize">
@@ -25,9 +25,9 @@
 
 			<div class="flex items-center">
 				<div class="relative">
-					<box-icon name='search' class="w-5 h-5 absolute text-gray-400"></box-icon>
 					<input type="text" placeholder="Search destination..."
-						class="w-full border rounded-md px-2 py-1 text-sm">
+						class="w-full border border-gray-100 rounded-md px-2 py-2 text-sm">
+					<!-- <box-icon name='search' class="w-5 h-5 absolute text-gray-400"></box-icon> -->
 				</div>
 
 				<button class="ml-4 bg-yellow-400 hover:bg-red-600 text-white text-sm px-4 py-2 rounded-md capitalize">
