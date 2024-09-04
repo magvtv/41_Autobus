@@ -1,43 +1,29 @@
 [
 	{ 		
 		"id": "1",
-        "image": "../images/hero.webp",
+        "imageUrl": "images/hero.webp",
         "routeName": "Nairobi to Kigali",
         "busType": "Executive Bus",
         "price": "KES 2100"
 	},
 	{
         "id": 2,
-        "image": "../images/hero.webp",
+        "imageUrl": "images/hero.webp",
         "routeName": "Mombasa to Daresalaam",
         "busType": "Sleeper Bus",
         "price": "KES 1500"
     },
 	{
         "id": 3,
-        "image": "../images/hero.webp",
+        "imageUrl": "images/hero.webp",
         "routeName": "Kisumu to Malindi",
         "busType": "Luxury",
         "price": "KES 1700"
     },
 	{
         "id": 4,
-        "image": "../images/hero.webp",
-        "routeName": "Kisumu to Malindi",
-        "busType": "Luxury",
-        "price": "KES 1700"
-    },
-	{
-        "id": 5,
-        "image": "../images/hero.webp",
-        "routeName": "Kisumu to Malindi",
-        "busType": "Luxury",
-        "price": "KES 1700"
-    },
-	{
-        "id": 6,
-        "image": "../images/hero.webp",
-        "routeName": "Kisumu to Malindi",
+        "imageUrl": "images/hero.webp",
+        "routeName": "Lamu to Kisii",
         "busType": "Luxury",
         "price": "KES 1700"
     }

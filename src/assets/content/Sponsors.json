@@ -1,0 +1,18 @@
+[
+    {
+      "id": 1,
+      "name": "HelloSign",
+      "logo": "images/hellosign-logo.png"
+    },
+    {
+      "id": 2,
+      "name": "DoorDash",
+      "logo": "images/doordash-logo.png"
+    },
+    {
+      "id": 3,
+      "name": "Coinbase",
+      "logo": "images/coinbase-logo.png"
+    }
+  ]
+  
