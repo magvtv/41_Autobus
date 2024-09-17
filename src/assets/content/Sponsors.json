@@ -1,18 +1,18 @@
 [
     {
       "id": 1,
-      "name": "HelloSign",
-      "logo": "images/hellosign-logo.png"
+      "name": "Kenya Roads",
+      "logo": "images/mpesa.png"
     },
     {
       "id": 2,
-      "name": "DoorDash",
-      "logo": "images/doordash-logo.png"
+      "name": "Safaricom",
+      "logo": "images/mpesa.png"
     },
     {
       "id": 3,
-      "name": "Coinbase",
-      "logo": "images/coinbase-logo.png"
+      "name": "NTSA",
+      "logo": "images/mpesa.png"
     }
   ]
   
