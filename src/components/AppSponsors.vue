@@ -5,7 +5,11 @@
         </h2>
         <div class="flex justify-center flex-wrap gap-8">
             <div v-for="sponsor in sponsors" :key="sponsor.id" class="sponsor-card">
-                <img :src="getImagePath(sponsor.logo)" :alt="sponsor.name" class="h-16 w-auto object-contain" />
+                <img 
+                    :src="getImagePath(sponsor.logo)" 
+                    :alt="sponsor.name" 
+                    class="h-30 w-auto object-contain"
+                />
             </div>
         </div>
     </div>
@@ -26,6 +30,6 @@ onMounted(() => {
 
 // Method to resolve image paths
 const getImagePath = (imageRelativePath) => {
-    return require(`@/assets/${imageRelativePath}`);
+    return (`@/assets/${imageRelativePath}`);
 };
 </script>

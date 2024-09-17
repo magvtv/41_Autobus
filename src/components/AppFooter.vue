@@ -88,11 +88,3 @@
         </div>
     </footer>
 </template>
-
-<script setup>
-// No additional logic is needed for this simple footer.
-</script>
-
-<style scoped>
-/* Custom styles can be added here if necessary */
-</style>

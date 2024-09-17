@@ -24,13 +24,7 @@
 			</div>
 
 			<div class="flex items-center">
-				<div class="relative">
-					<input type="text" placeholder="Search destination..."
-						class="w-full border border-gray-100 rounded-md px-2 py-2 text-sm">
-					<!-- <box-icon name='search' class="w-5 h-5 absolute text-gray-400"></box-icon> -->
-				</div>
-
-				<button class="ml-4 bg-yellow-400 hover:bg-red-600 text-white text-sm px-4 py-2 rounded-md capitalize">
+				<button class="ml-4 bg-yellow-400 hover:bg-red-600 text-white text-sm px-4 py-2 rounded-md capitalize font-semibold">
 					get started
 				</button>
 			</div>
