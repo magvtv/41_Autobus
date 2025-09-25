@@ -1,0 +1,47 @@
+{
+    "name": "matatu-mind",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev -H 0.0.0.0 --turbopack",
+        "build": "next build",
+        "start": "next start",
+        "lint": "npx tsc --noEmit && next lint",
+        "format": "npx biome format --write"
+    },
+    "dependencies": {
+        "@radix-ui/react-progress": "^1.1.7",
+        "@radix-ui/react-select": "^2.2.6",
+        "@radix-ui/react-slot": "^1.2.3",
+        "@radix-ui/react-switch": "^1.2.6",
+        "@radix-ui/react-tabs": "^1.1.13",
+        "@types/leaflet": "^1.9.20",
+        "class-variance-authority": "^0.7.1",
+        "clsx": "^2.1.1",
+        "date-fns": "^4.1.0",
+        "leaflet": "^1.9.4",
+        "lucide-react": "^0.544.0",
+        "next": "^15.3.2",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "react-leaflet": "^5.0.0",
+        "recharts": "^3.2.1",
+        "tailwind-merge": "^3.3.1",
+        "tailwindcss-animate": "^1.0.7"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "1.9.4",
+        "@eslint/eslintrc": "^3.3.1",
+        "@types/estree": "^1.0.8",
+        "@types/geojson": "^7946.0.16",
+        "@types/json-schema": "^7.0.15",
+        "@types/node": "^20.19.17",
+        "@types/react": "^18.3.22",
+        "@types/react-dom": "^18.3.7",
+        "eslint": "^9.27.0",
+        "eslint-config-next": "15.1.7",
+        "postcss": "^8.5.3",
+        "tailwindcss": "^3.4.17",
+        "typescript": "^5.8.3"
+    }
+}

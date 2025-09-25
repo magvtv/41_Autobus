@@ -1,0 +1,412 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import {
+  mockVehicles,
+  mockChargerStations,
+  calculateFleetStats,
+  scenarios,
+  type Vehicle,
+} from "@/lib/mockData";
+import { MapView } from "@/components/MapView";
+import { ChargingQueue } from "@/components/ChargingQueue";
+import { SimulationControls } from "@/components/SimulationControls";
+import {
+  Battery,
+  Car,
+  MapPin,
+  Zap,
+  Clock,
+  TrendingUp,
+  AlertTriangle,
+  Play,
+  RotateCcw,
+} from "lucide-react";
+
+interface FleetStats {
+  totalVehicles: number;
+  evVehicles: number;
+  dieselVehicles: number;
+  activeVehicles: number;
+  chargingVehicles: number;
+  totalRevenue: number;
+  avgSoc: number;
+}
+
+export function FleetDashboard() {
+  const [vehicles, setVehicles] = useState<Vehicle[]>(mockVehicles);
+  const [selectedScenario, setSelectedScenario] =
+    useState<string>("normal-day");
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [simulationTime, setSimulationTime] = useState("16:30");
+  const [fleetStats, setFleetStats] = useState<FleetStats>(
+    calculateFleetStats(),
+  );
+
+  const getStatusColor = (status: Vehicle["status"]) => {
+    switch (status) {
+      case "in-route":
+        return "bg-blue-500";
+      case "charging":
+        return "bg-green-500";
+      case "idle":
+        return "bg-yellow-500";
+      case "maintenance":
+        return "bg-red-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
+  const getStatusText = (status: Vehicle["status"]) => {
+    switch (status) {
+      case "in-route":
+        return "On Route";
+      case "charging":
+        return "Charging";
+      case "idle":
+        return "Available";
+      case "maintenance":
+        return "Maintenance";
+      default:
+        return "Unknown";
+    }
+  };
+
+  const getBatteryColor = (socPercent?: number) => {
+    if (!socPercent) return "text-gray-500";
+    if (socPercent < 20) return "text-red-500";
+    if (socPercent < 50) return "text-yellow-500";
+    return "text-green-500";
+  };
+
+  const handleSmartScheduler = () => {
+    // Simulate smart charging schedule optimization
+    setIsSimulating(true);
+
+    setTimeout(() => {
+      const updatedVehicles = vehicles.map((vehicle) => {
+        if (
+          vehicle.type === "electric" &&
+          vehicle.socPercent &&
+          vehicle.socPercent < 30
+        ) {
+          return {
+            ...vehicle,
+            status: "charging" as const,
+            currentRoute: `Scheduled charging at ${getClosestCharger(vehicle)}`,
+          };
+        }
+        return vehicle;
+      });
+      setVehicles(updatedVehicles);
+      setIsSimulating(false);
+    }, 2000);
+  };
+
+  const getClosestCharger = (vehicle: Vehicle) => {
+    // Simple logic to assign closest charger
+    const chargers = [
+      "CBD Central",
+      "Westlands Hub",
+      "Kasarani Station",
+      "Embakasi Depot",
+    ];
+    return chargers[Math.floor(Math.random() * chargers.length)];
+  };
+
+  const runSimulation = () => {
+    setIsSimulating(true);
+
+    // Simulate a day of operations
+    const scenario = scenarios[selectedScenario as keyof typeof scenarios];
+
+    setTimeout(() => {
+      const updatedVehicles = vehicles.map((vehicle) => {
+        const random = Math.random();
+
+        // Simulate battery drain and status changes
+        if (vehicle.type === "electric" && vehicle.socPercent) {
+          const drain = scenario.trafficMultiplier * (5 + Math.random() * 10);
+          const newSoc = Math.max(0, vehicle.socPercent - drain);
+
+          const newStatus: Vehicle["status"] =
+            newSoc < 15 ? "charging" : random < 0.7 ? "in-route" : "idle";
+
+          return {
+            ...vehicle,
+            socPercent: Math.round(newSoc),
+            status: newStatus,
+            totalTripsToday: vehicle.totalTripsToday + (random < 0.8 ? 1 : 0),
+            revenue:
+              vehicle.revenue +
+              (random < 0.8 ? Math.floor(Math.random() * 200) + 100 : 0),
+          };
+        }
+
+        return vehicle;
+      });
+
+      setVehicles(updatedVehicles);
+      setFleetStats(calculateFleetStats());
+      setIsSimulating(false);
+    }, 3000);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Fleet Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Vehicles
+            </CardTitle>
+            <Car className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{fleetStats.totalVehicles}</div>
+            <p className="text-xs text-muted-foreground">
+              {fleetStats.evVehicles} EV • {fleetStats.dieselVehicles} Diesel
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Routes</CardTitle>
+            <MapPin className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {fleetStats.activeVehicles}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {fleetStats.chargingVehicles} charging
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Avg Battery</CardTitle>
+            <Battery className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{fleetStats.avgSoc}%</div>
+            <p className="text-xs text-muted-foreground">Fleet average SOC</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Daily Revenue</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              KSh {fleetStats.totalRevenue.toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">+12% from yesterday</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Control Panel */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Fleet Operations Control</CardTitle>
+          <CardDescription>
+            Manage routing, charging, and simulation scenarios
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <label htmlFor="scenario-select" className="text-sm font-medium">
+                Scenario:
+              </label>
+              <Select
+                value={selectedScenario}
+                onValueChange={setSelectedScenario}
+              >
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(scenarios).map(([key, scenario]) => (
+                    <SelectItem key={key} value={key}>
+                      {scenario.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button
+              onClick={handleSmartScheduler}
+              disabled={isSimulating}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Zap className="w-4 h-4 mr-2" />
+              {isSimulating ? "Optimizing..." : "Smart Scheduler"}
+            </Button>
+
+            <Button
+              onClick={runSimulation}
+              disabled={isSimulating}
+              variant="outline"
+            >
+              <Play className="w-4 h-4 mr-2" />
+              {isSimulating ? "Simulating..." : "Simulate Day"}
+            </Button>
+
+            <div className="flex items-center space-x-2">
+              <Clock className="w-4 h-4" />
+              <span className="text-sm text-muted-foreground">
+                Simulation Time: {simulationTime}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Main Layout: Map and Tables */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Map View */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Live Fleet Map</CardTitle>
+            <CardDescription>
+              Real-time vehicle positions and charging stations
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <MapView
+              vehicles={vehicles}
+              chargerStations={mockChargerStations}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Charging Queue */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Charging Queue</CardTitle>
+            <CardDescription>
+              Current and scheduled charging sessions
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChargingQueue vehicles={vehicles} />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Vehicle Fleet Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Fleet Status</CardTitle>
+          <CardDescription>
+            Detailed view of all vehicles and their current status
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Vehicle</TableHead>
+                <TableHead>Driver</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Battery/Fuel</TableHead>
+                <TableHead>Current Route</TableHead>
+                <TableHead>Trips Today</TableHead>
+                <TableHead>Revenue</TableHead>
+                <TableHead>Next Dispatch</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {vehicles.map((vehicle) => (
+                <TableRow key={vehicle.id}>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center space-x-2">
+                      <div
+                        className={`w-2 h-2 rounded-full ${getStatusColor(vehicle.status)}`}
+                      />
+                      <span>{vehicle.plate}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {vehicle.type === "electric" ? "EV" : "Diesel"}
+                      </Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell>{vehicle.driver}</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">
+                      {getStatusText(vehicle.status)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-1">
+                      <Battery
+                        className={`w-4 h-4 ${getBatteryColor(vehicle.socPercent)}`}
+                      />
+                      <span className={getBatteryColor(vehicle.socPercent)}>
+                        {vehicle.type === "electric"
+                          ? `${vehicle.socPercent}%`
+                          : `${vehicle.fuelLiters}L`}
+                      </span>
+                      {vehicle.type === "electric" &&
+                        vehicle.socPercent &&
+                        vehicle.socPercent < 20 && (
+                          <AlertTriangle className="w-4 h-4 text-red-500" />
+                        )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="max-w-48 truncate">
+                    {vehicle.currentRoute || "Available"}
+                  </TableCell>
+                  <TableCell>{vehicle.totalTripsToday}</TableCell>
+                  <TableCell>KSh {vehicle.revenue.toLocaleString()}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {new Date(vehicle.nextDispatchTimestamp).toLocaleTimeString(
+                      "en-US",
+                      {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      },
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

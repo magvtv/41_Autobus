@@ -1,0 +1,150 @@
+Project: MatatuMind
+Tagline: Smarter routes. Reliable rides. Greener cities.
+Purpose: A hackathon MVP to optimize matatu/minibus operations in African cities by combining route optimization, real-time (or simulated) traffic and charger availability, and a smart charging scheduler for EV fleets. Works as a developer-friendly web app (Next.js or Vue.js) deployable to Vercel/Netlify.
+
+OVERVIEW
+- Core value: Reduce downtime, reduce fuel/energy waste, and increase operational predictability for matatu/minibus fleet operators and drivers.
+- Primary users:
+  - Fleet Manager (dashboard)
+  - Driver (mobile-friendly view)
+  - Operator/Investor (heatmap & ROI estimator)
+- Constraints:
+  - Timebox: hackathon MVP (single weekend)
+  - Must be demonstrable with simulated data (no production external dependencies required)
+  - Minimal, accessible UI; design supports low-bandwidth screens.
+  - All sensitive operations must be mocked/anonymized.
+
+TECH STACK (recommended)
+- Frontend: Next.js (React) — recommended if deploying to Vercel. Alternative: Vue 3 + Vite (deploy to Netlify).
+- Styling: Tailwind CSS (minimal design), Heroicons or Lucide for icons.
+- Backend: Node.js + Express (or Next.js API routes if using Next). Lightweight SQLite for prototyping or in-memory JSON for pure demo.
+- Data & simulation: Python scripts for data generation (optional) OR JS data generator.
+- Map / Geodata: Mapbox (demo token) or Leaflet + OSM tiles.
+- ML / Optimization: Python for server-side model prototypes (scikit-learn, networkx for routing) OR JS heuristic + a small WebWorker for route calc. Use simple algorithms that run quickly in demo:
+  - Shortest path (Dijkstra/A*) with weightings for congestion/time-of-day.
+  - Greedy scheduling / priority queue for charging allocation.
+- Hosting: Vercel (NextJS) or Netlify (Vue).
+- CI: GitHub Actions for lint/test/build -> deploy.
+- Repo structure (recommended):
+  - /frontend (NextJS or Vue app)
+  - /backend (Express or API routes)
+  - /sim (data generator + simulators)
+  - /docs (pitch script, demo assets)
+  - /ml (optional prototypes, notebooks)
+  - README.md, project_requirements.txt, todos.md
+
+MVP FEATURE LIST (Minimal, must-have)
+1. Fleet Dashboard (Fleet Manager)
+   - Map view: positions of minibuses (simulated), charging stations, route suggestions.
+   - Table: vehicle id, battery/fuel %, status (in-route / charging / idle), estimated time-to-empty.
+   - Charging queue: shows currently charging and waiting vehicles.
+   - Smart Scheduler button: runs scheduling optimization and outputs a charging schedule.
+   - Simulate Day: button to run a simulated day that demonstrates congestion peaks and scheduler behavior.
+
+2. Driver View (mobile-friendly)
+   - Single bus view: current route, recommended next stop (charging if needed), suggested route adjustments in response to congestion.
+   - Notify driver: simulated alert popups (e.g., 'Change route to avoid jam; end-of-shift charging available at Kariobangi').
+
+3. Route Optimization Engine (server-side or client-side)
+   - Input: origin, destination, departure time, battery/fuel level, passenger load (optional).
+   - Output: optimized route that minimizes ETA and ensures proximity to available chargers or depots.
+   - Must support simple rerouting during simulation.
+
+4. Charging Scheduler (for EV fleets) — simplified algorithm
+   - Inputs: vehicle SOCs (state-of-charge), next dispatch times, charger capacity (N plugs), grid health (simulated high/low).
+   - Output: time slots allocation, prioritized by criticality (low SoC, upcoming nearest dispatch).
+   - Must include a contingency for grid stress: when grid simulated as "brownout", shift charging time windows.
+
+5. Charging Station Placement Heatmap (investor view) — lightweight
+   - Input: trip origin/destination density (from simulated trip logs), grid constraints (mock).
+   - Output: prioritized locations for new chargers with a simple ROI estimate (CAPEX proxy) — Excel-like quick math.
+
+6. Simulation Mode
+   - A toggle or script that plays a time-accelerated day: trip generation, congestion events, charger queue forming, scheduler run.
+   - Play/Pause, step-forward, and export logs for demo.
+
+7. Demo Storyline / Preset Scenarios
+   - 3 presets: "Rush hour grid brownout", "Normal day (no interruptions)", "Single depot failure".
+   - Each preset preloads data and demonstrates the system’s decisions.
+
+UX / UI GUIDELINES (minimal)
+- Color palette: neutral + one accent (avoid heavy visuals).
+- Layout: split view - left: controls & tables, right: map.
+- Mobile: single column driver view with large actionable buttons.
+- Accessibility: large fonts for critical alerts; localizable strings (English + Swahili placeholders).
+- Language: UI copy must be concise, action-oriented ("Reroute now", "Charge scheduled 23:00–00:30").
+
+DATA MODEL (prototype)
+- Vehicle:
+  - id, plate, type (diesel/electric), soc_percent (or fuel_liters), capacity, last_known_location {lat,long}, status, next_dispatch_timestamp
+- Trip:
+  - id, origin{lat,long}, destination{lat,long}, passengers, scheduled_departure, actual_departure, actual_arrival, vehicle_id
+- ChargerStation:
+  - id, location, plugs_total, plugs_available, grid_node_id, cost_per_kwh (mock)
+- GridNode (mocked):
+  - id, region, capacity_kw, status (normal/brownout)
+- ChargingSchedule:
+  - vehicle_id, charger_id, start_time, end_time, expected_energy_kwh
+- SimulationLog:
+  - timestamp, event_type, details
+
+ALGORITHMS (implementation guidance)
+- Routing:
+  - Use graph of roads (simplify to nodes & edges). For hackathon, you can use Mapbox Directions (mocking traffic) or build simple weighted graph with road segments and time-of-day congestion factors.
+  - Use A* (heuristic = euclidean/dist) or Dijkstra with dynamic weight = base_time * (1 + congestion_factor).
+- Rerouting:
+  - Evaluate alternate nodes near destination with available chargers; add small detour cost; choose lowest ETA given expected charging need.
+- Charging Scheduler:
+  - Greedy priority queue: vehicles sorted by (criticality_score = w1 * (1 - soc) + w2 * time_to_next_dispatch + w3 * trip_importance)
+  - Assign best-fit time slots while respecting plugs_total and simulated grid constraints.
+- Battery health estimation (optional):
+  - Simple linear model: battery_degradation_rate = f(temp, cycles). Demonstrate as projected % capacity in X months. Use simplified values for demo.
+
+INTEGRATIONS (optional)
+- Map tile provider: Mapbox or OSM.
+- Traffic data: simulated or optionally use Mapbox/Here live traffic.
+- Real-time: socket.io for realtime updates (demo will simulate emits).
+
+SECURITY & PRIVACY
+- No PII in demo. Use anonymized vehicle ids and mock driver names.
+- If you use third-party keys (Mapbox), add to environment variables — never commit keys.
+- Disable any persistent credentialing. Use mock login (role selection) for demo.
+
+TESTING & QA
+- Unit tests for scheduler and route engine (JS tests using Jest).
+- Integration smoke tests: simulate preset scenarios and assert key events: 'No vehicle stranded', 'Queue length < threshold after scheduling'.
+- Manual demo test: run all preset scenarios locally and record outcomes.
+
+DEPLOYMENT
+- Frontend build: Next.js -> Vercel; or Vue -> Netlify.
+- API: If using Next API routes, deploy together; otherwise deploy Express on Vercel serverless or lightweight Heroku alternative.
+- Env vars: MAPBOX_TOKEN, NODE_ENV, FAKE_DATA_SEED
+- Demo artifacts: export simulation logs and a short 2-3 minute screen recording for backup.
+
+DEMO SCRIPT (concise)
+1. Open Fleet Dashboard (Chaos state: many low SOC vehicles; charging queue long).
+2. Press "Smart Scheduler" -> show timeline assignment; charging queue shortens.
+3. Click vehicle -> show driver view -> accepts reroute suggestion; proceed to charger.
+4. Show Investor Heatmap -> highlight suggested charger location -> show ROI popup.
+5. Toggle "grid brownout" -> scheduler adapts -> show deferred charging & driver adjustments.
+
+METRICS (for demo)
+- Fleet uptime % (vehicles available vs needed)
+- Avg trip delay (before vs after)
+- Charging queue length (before vs after)
+- Fuel/energy saved estimate per day
+- Simple CO2 metric (diesel liters saved -> kg CO2)
+
+FUTURE EXTENSIONS (post-hackathon)
+- Live telemetry ingestion (telemetry devices + MQTT).
+- RL-based routing for continual learning.
+- Integrate battery RUL (physics-informed) model.
+- Marketplace for charging station investment + payment settlement.
+- Offline driver app (PWA) for intermittent connectivity.
+
+DOCUMENTS TO COMMIT
+- README.md (setup, run instructions)
+- project_requirements.txt (this file)
+- todos.md (task list)
+- demo_playbook.md (demo script + expected outputs)
+- LICENSE (MIT)
