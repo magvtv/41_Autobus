@@ -7,7 +7,16 @@
         "build": "next build",
         "start": "next start",
         "lint": "npx tsc --noEmit && next lint",
-        "format": "npx biome format --write"
+        "format": "npx biome format --write",
+        "clean": "node scripts/cache-manager.mjs clean",
+        "clean:cache": "node scripts/cache-manager.mjs clean-cache",
+        "clean:build": "node scripts/cache-manager.mjs clean-build",
+        "cache:check": "node scripts/cache-manager.mjs check",
+        "cache:size": "node scripts/cache-manager.mjs size",
+        "test:api": "node scripts/test-api.mjs",
+        "test:api:verbose": "node scripts/test-api.mjs --verbose",
+        "test:api:port": "node scripts/test-api.mjs --port=3002",
+        "demo": "node scripts/demo-optimization.mjs"
     },
     "dependencies": {
         "@radix-ui/react-progress": "^1.1.7",
@@ -22,6 +31,7 @@
         "leaflet": "^1.9.4",
         "lucide-react": "^0.544.0",
         "next": "^15.3.2",
+        "radix-ui": "^1.4.3",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "react-leaflet": "^5.0.0",
