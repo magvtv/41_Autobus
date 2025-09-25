@@ -1,44 +1,50 @@
 # MatatuMind - TODOS
 Team: Deez Nerdz
-Members: Joe (Frontend Lead), Ryan (ML/Optimization), Emmanuel (UX/Driver Flow), PH (Product / Demo Story), Kevin (Backend / DevOps)
-Repo structure (recommended):
-- /frontend
-- /backend
-- /sim
-- /ml (optional)
-- /docs
+Members: PH (Frontend Lead), Ryan (ML/Optimization), Emmanuel (UX/Driver Flow), Joe (Product / Demo Story), Kevin (Backend / DevOps)
+
 
 --- PRIORITY: MUST FOR MVP ---
 These must be done to have a functioning hackathon demo.
 
-1) Project Bootstrapping (PH, Joe, Kevin) - owner: PH
-   - Create repo + branches: main, dev.
-   - Add README.md, project_requirements.txt, todos.md.
-   - Create initial issue board (GitHub Projects or Trello).
-   - Create environment variables template (.env.example).
+## 🎯 UPDATED PRIORITY ORDER (2024-12-25)
+**API Architecture Decision: REST (using Next.js API routes + mock data)**
 
-2) Frontend App Skeleton (Joe)
-   - [ ] Choose framework: Next.js (preferred) OR Vue 3 + Vite.
-   - [ ] Initialize project with Tailwind CSS and routing.
-   - [ ] Create core pages: /dashboard, /driver, /investor, /simulate.
-   - [ ] Implement layout: left controls + right map. Include placeholder components for VehicleList, ChargerList, SchedulerPanel.
-   - Acceptance: npm run dev shows blank UI with placeholder map and side panel.
+### CRITICAL PATH (Complete in order):
+1. **Backend API** (Critical for demo) - Kevin
+2. **Route optimization engine** (Core feature) - Ryan  
+3. **Charging scheduler** (Key differentiator) - Ryan, Kevin
 
-3) Map Integration (Joe, Emmanuel)
-   - [ ] Integrate Mapbox GL or Leaflet + OSM.
-   - [ ] Render mock map centered on Nairobi coordinates.
-   - [ ] Add map layer for vehicle markers and charger markers from local JSON.
-   - Acceptance: markers render; clicking marker shows a small info popup.
+---
 
-4) Backend API (Kevin)
-   - [ ] Initialize Node/Express or use Next.js API routes.
-   - [ ] Implement endpoints:
-       - GET /api/vehicles -> returns vehicle list (mock)
-       - GET /api/chargers -> returns charger list (mock)
+1) Project Bootstrapping (PH, Joe, Kevin) - owner: PH ✅ COMPLETED
+   - ✅ Create repo + branches: main, dev.
+   - ✅ Add README.md, project_requirements.txt, todos.md.
+   - ✅ Create initial issue board (GitHub Projects or Trello).
+   - ✅ Create environment variables template (.env.example).
+
+2) Frontend App Skeleton (Joe) ✅ COMPLETED
+   - ✅ Choose framework: Next.js (preferred) OR Vue 3 + Vite.
+   - ✅ Initialize project with Tailwind CSS and routing.
+   - ✅ Create core pages: /dashboard, /driver, /investor, /simulate.
+   - ✅ Implement layout: left controls + right map. Include placeholder components for VehicleList, ChargerList, SchedulerPanel.
+   - ✅ Acceptance: npm run dev shows blank UI with placeholder map and side panel.
+
+3) Map Integration (Joe, Emmanuel) ✅ COMPLETED
+   - ✅ Integrate Mapbox GL or Leaflet + OSM.
+   - ✅ Render mock map centered on Nairobi coordinates.
+   - ✅ Add map layer for vehicle markers and charger markers from local JSON.
+   - ✅ Acceptance: markers render; clicking marker shows a small info popup.
+
+4) Backend API (Kevin) 🔥 PRIORITY #1
+   - [ ] **CRITICAL**: Implement Next.js API routes with REST endpoints:
+       - GET /api/vehicles -> returns vehicle list (from mockData.ts)
+       - GET /api/chargers -> returns charger list (from mockData.ts)
        - POST /api/sim/run -> starts simulation (server-side or client-side)
        - POST /api/scheduler -> accepts current statuses and returns schedule
        - POST /api/route -> returns optimized route for a pair
-   - Acceptance: API stub returns JSON and CORS works.
+   - [ ] **CRITICAL**: Connect frontend components to API endpoints
+   - [ ] **CRITICAL**: Replace direct mockData imports with API calls
+   - Acceptance: Frontend fetches data from API endpoints, not direct imports.
 
 5) Data Simulator (Kevin, Ryan)
    - [ ] Create /sim/data_gen.js (or Python) that emits:
@@ -48,18 +54,23 @@ These must be done to have a functioning hackathon demo.
    - [ ] Provide sample presets: rush_hour_brownout.json, normal_day.json
    - Acceptance: simulator can emit JSON logs and feed backend API.
 
-6) Route Optimization Prototype (Ryan)
-   - [ ] Implement a simple A*/Dijkstra on a small synthetic graph (or call Mapbox Directions).
-   - [ ] Add congestion factor: multiply segment_time by (1 + congestion_factor).
-   - [ ] Return route geometry + ETA + distance.
-   - Acceptance: /api/route returns route with ETA that changes when congestion input changes.
+6) Route Optimization Engine (Ryan) 🔥 PRIORITY #2
+   - [ ] **CRITICAL**: Implement A*/Dijkstra algorithm for route optimization
+   - [ ] **CRITICAL**: Add congestion factor: multiply segment_time by (1 + congestion_factor)
+   - [ ] **CRITICAL**: Return route geometry + ETA + distance
+   - [ ] **CRITICAL**: Integrate with /api/route endpoint
+   - [ ] **CRITICAL**: Support real-time rerouting based on traffic conditions
+   - Acceptance: /api/route returns optimized route with ETA that adapts to congestion.
 
-7) Charging Scheduler Prototype (Ryan, Kevin)
-   - [ ] Implement greedy priority queue scheduler:
+7) Charging Scheduler Algorithm (Ryan, Kevin) 🔥 PRIORITY #3
+   - [ ] **CRITICAL**: Implement greedy priority queue scheduler:
        - Inputs: vehicle soc, next_dispatch, charger capacity, grid_status
        - Output: assignments with start/end times
-   - [ ] Implement grid constraint logic (brownout => reduce concurrent chargers).
-   - Acceptance: /api/scheduler returns feasible schedule for current mock fleet.
+   - [ ] **CRITICAL**: Implement grid constraint logic (brownout => reduce concurrent chargers)
+   - [ ] **CRITICAL**: Add priority scoring: criticality_score = w1 * (1 - soc) + w2 * time_to_next_dispatch
+   - [ ] **CRITICAL**: Integrate with /api/scheduler endpoint
+   - [ ] **CRITICAL**: Support dynamic rescheduling based on grid status changes
+   - Acceptance: /api/scheduler returns feasible schedule that adapts to grid conditions.
 
 8) Dashboard Integration (Joe, Kevin)
    - [ ] Poll /api/vehicles and /api/chargers.
