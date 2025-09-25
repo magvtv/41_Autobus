@@ -33,6 +33,14 @@ import {
   scenarios,
   type Vehicle,
 } from "@/lib/mockData";
+import { 
+  runChargingScheduler, 
+  runSimulation as runSimulationAPI, 
+  getVehicles, 
+  getChargers, 
+  getFleetStats,
+  type ChargingScheduleResponse 
+} from "@/lib/api";
 import { MapView } from "@/components/MapView";
 import { ChargingQueue } from "@/components/ChargingQueue";
 import { SimulationControls } from "@/components/SimulationControls";
@@ -60,6 +68,7 @@ interface FleetStats {
 
 export function FleetDashboard() {
   const [vehicles, setVehicles] = useState<Vehicle[]>(mockVehicles);
+  const [chargers, setChargers] = useState(mockChargerStations);
   const [selectedScenario, setSelectedScenario] =
     useState<string>("normal-day");
   const [isSimulating, setIsSimulating] = useState(false);
@@ -67,6 +76,8 @@ export function FleetDashboard() {
   const [fleetStats, setFleetStats] = useState<FleetStats>(
     calculateFleetStats(),
   );
+  const [chargingSchedule, setChargingSchedule] = useState<ChargingScheduleResponse | null>(null);
+  const [useRealAPI, setUseRealAPI] = useState(false);
 
   const getStatusColor = (status: Vehicle["status"]) => {
     switch (status) {
@@ -105,28 +116,80 @@ export function FleetDashboard() {
     return "text-green-500";
   };
 
-  const handleSmartScheduler = () => {
-    // Simulate smart charging schedule optimization
+  const handleSmartScheduler = async () => {
     setIsSimulating(true);
 
-    setTimeout(() => {
-      const updatedVehicles = vehicles.map((vehicle) => {
-        if (
-          vehicle.type === "electric" &&
-          vehicle.socPercent &&
-          vehicle.socPercent < 30
-        ) {
-          return {
-            ...vehicle,
-            status: "charging" as const,
-            currentRoute: `Scheduled charging at ${getClosestCharger(vehicle)}`,
-          };
+    try {
+      if (useRealAPI) {
+        // Use real API
+        const response = await runChargingScheduler({
+          vehicles,
+          chargers,
+          gridStatus: selectedScenario === 'rush-hour-brownout' ? 'brownout' : 'normal'
+        });
+
+        if (response.success) {
+          setChargingSchedule(response.data);
+          
+          // Update vehicles based on real schedule
+          const updatedVehicles = vehicles.map((vehicle) => {
+            const scheduledVehicle = response.data.schedule.find(s => s.vehicleId === vehicle.id);
+            if (scheduledVehicle) {
+              return {
+                ...vehicle,
+                status: "charging" as const,
+                currentRoute: `Scheduled charging at ${scheduledVehicle.chargerId}`,
+              };
+            }
+            return vehicle;
+          });
+          setVehicles(updatedVehicles);
         }
-        return vehicle;
-      });
-      setVehicles(updatedVehicles);
+      } else {
+        // Fallback to mock simulation
+        setTimeout(() => {
+          const updatedVehicles = vehicles.map((vehicle) => {
+            if (
+              vehicle.type === "electric" &&
+              vehicle.socPercent &&
+              vehicle.socPercent < 30
+            ) {
+              return {
+                ...vehicle,
+                status: "charging" as const,
+                currentRoute: `Scheduled charging at ${getClosestCharger(vehicle)}`,
+              };
+            }
+            return vehicle;
+          });
+          setVehicles(updatedVehicles);
+          setIsSimulating(false);
+        }, 2000);
+        return;
+      }
+    } catch (error) {
+      console.error('Smart scheduler failed:', error);
+      // Fallback to mock behavior
+      setTimeout(() => {
+        const updatedVehicles = vehicles.map((vehicle) => {
+          if (
+            vehicle.type === "electric" &&
+            vehicle.socPercent &&
+            vehicle.socPercent < 30
+          ) {
+            return {
+              ...vehicle,
+              status: "charging" as const,
+              currentRoute: `Scheduled charging at ${getClosestCharger(vehicle)}`,
+            };
+          }
+          return vehicle;
+        });
+        setVehicles(updatedVehicles);
+      }, 2000);
+    } finally {
       setIsSimulating(false);
-    }, 2000);
+    }
   };
 
   const getClosestCharger = (vehicle: Vehicle) => {
@@ -140,42 +203,89 @@ export function FleetDashboard() {
     return chargers[Math.floor(Math.random() * chargers.length)];
   };
 
-  const runSimulation = () => {
+  const runSimulation = async () => {
     setIsSimulating(true);
 
-    // Simulate a day of operations
-    const scenario = scenarios[selectedScenario as keyof typeof scenarios];
+    try {
+      if (useRealAPI) {
+        // Use real simulation API
+        const response = await runSimulationAPI({
+          scenario: selectedScenario,
+          duration: 2,
+          timeStep: 0.5
+        });
 
-    setTimeout(() => {
-      const updatedVehicles = vehicles.map((vehicle) => {
-        const random = Math.random();
-
-        // Simulate battery drain and status changes
-        if (vehicle.type === "electric" && vehicle.socPercent) {
-          const drain = scenario.trafficMultiplier * (5 + Math.random() * 10);
-          const newSoc = Math.max(0, vehicle.socPercent - drain);
-
-          const newStatus: Vehicle["status"] =
-            newSoc < 15 ? "charging" : random < 0.7 ? "in-route" : "idle";
-
-          return {
-            ...vehicle,
-            socPercent: Math.round(newSoc),
-            status: newStatus,
-            totalTripsToday: vehicle.totalTripsToday + (random < 0.8 ? 1 : 0),
-            revenue:
-              vehicle.revenue +
-              (random < 0.8 ? Math.floor(Math.random() * 200) + 100 : 0),
-          };
+        if (response.success) {
+          // Update vehicles based on simulation results
+          const updatedVehicles = response.data.result.finalState.vehicles;
+          setVehicles(updatedVehicles);
+          setFleetStats(calculateFleetStats());
         }
+      } else {
+        // Fallback to mock simulation
+        const scenario = scenarios[selectedScenario as keyof typeof scenarios];
 
-        return vehicle;
-      });
+        setTimeout(() => {
+          const updatedVehicles = vehicles.map((vehicle) => {
+            const random = Math.random();
 
-      setVehicles(updatedVehicles);
-      setFleetStats(calculateFleetStats());
+            // Simulate battery drain and status changes
+            if (vehicle.type === "electric" && vehicle.socPercent) {
+              const drain = scenario.trafficMultiplier * (5 + Math.random() * 10);
+              const newSoc = Math.max(0, vehicle.socPercent - drain);
+
+              const newStatus: Vehicle["status"] =
+                newSoc < 15 ? "charging" : random < 0.7 ? "in-route" : "idle";
+
+              return {
+                ...vehicle,
+                socPercent: Math.round(newSoc),
+                status: newStatus,
+                totalTripsToday: vehicle.totalTripsToday + (random < 0.8 ? 1 : 0),
+                revenue:
+                  vehicle.revenue +
+                  (random < 0.8 ? Math.floor(Math.random() * 200) + 100 : 0),
+              };
+            }
+
+            return vehicle;
+          });
+
+          setVehicles(updatedVehicles);
+          setFleetStats(calculateFleetStats());
+          setIsSimulating(false);
+        }, 3000);
+        return;
+      }
+    } catch (error) {
+      console.error('Simulation failed:', error);
+      // Fallback to mock behavior
+      const scenario = scenarios[selectedScenario as keyof typeof scenarios];
+      setTimeout(() => {
+        const updatedVehicles = vehicles.map((vehicle) => {
+          const random = Math.random();
+          if (vehicle.type === "electric" && vehicle.socPercent) {
+            const drain = scenario.trafficMultiplier * (5 + Math.random() * 10);
+            const newSoc = Math.max(0, vehicle.socPercent - drain);
+            const newStatus: Vehicle["status"] =
+              newSoc < 15 ? "charging" : random < 0.7 ? "in-route" : "idle";
+
+            return {
+              ...vehicle,
+              socPercent: Math.round(newSoc),
+              status: newStatus,
+              totalTripsToday: vehicle.totalTripsToday + (random < 0.8 ? 1 : 0),
+              revenue: vehicle.revenue + (random < 0.8 ? Math.floor(Math.random() * 200) + 100 : 0),
+            };
+          }
+          return vehicle;
+        });
+        setVehicles(updatedVehicles);
+        setFleetStats(calculateFleetStats());
+      }, 3000);
+    } finally {
       setIsSimulating(false);
-    }, 3000);
+    }
   };
 
   return (
@@ -268,6 +378,17 @@ export function FleetDashboard() {
               </Select>
             </div>
 
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="api-toggle"
+                checked={useRealAPI}
+                onCheckedChange={setUseRealAPI}
+              />
+              <label htmlFor="api-toggle" className="text-sm font-medium">
+                Use Real API
+              </label>
+            </div>
+
             <Button
               onClick={handleSmartScheduler}
               disabled={isSimulating}
@@ -324,6 +445,37 @@ export function FleetDashboard() {
           </CardHeader>
           <CardContent>
             <ChargingQueue vehicles={vehicles} />
+            
+            {/* Real API Charging Schedule Results */}
+            {useRealAPI && chargingSchedule && (
+              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <h4 className="font-semibold text-green-800 mb-2">Smart Scheduler Results</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Scheduled:</span>
+                    <span className="font-medium">{chargingSchedule.summary.totalScheduled} vehicles</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Queued:</span>
+                    <span className="font-medium">{chargingSchedule.summary.totalQueued} vehicles</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Critical Priority:</span>
+                    <span className="font-medium">{chargingSchedule.summary.criticalVehiclesScheduled} scheduled</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Avg Wait Time:</span>
+                    <span className="font-medium">{chargingSchedule.summary.averageWaitTime} minutes</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Grid Status:</span>
+                    <span className={`font-medium ${chargingSchedule.summary.gridStatus === 'brownout' ? 'text-red-600' : 'text-green-600'}`}>
+                      {chargingSchedule.summary.gridStatus}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
