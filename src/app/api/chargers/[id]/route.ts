@@ -4,9 +4,10 @@ import { mockChargerStations, type ChargerStation } from '@/lib/mockData';
 // GET /api/chargers/[id] - Get specific charging station
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const stationId = params.id;
     const station = mockChargerStations.find(s => s.id === stationId);
 
@@ -41,9 +42,10 @@ export async function GET(
 // PUT /api/chargers/[id] - Update charging station
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const stationId = params.id;
     const body = await request.json();
     

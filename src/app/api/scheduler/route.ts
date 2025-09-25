@@ -64,7 +64,7 @@ function runChargingScheduler(
   gridStatus: string
 ): { 
   schedule: ChargingSchedule[], 
-  queue: Array<{ vehicle: any, waitTime: number, reason: string }>,
+  queue: Array<{ vehicle: Vehicle, waitTime: number, reason: string }>,
   summary: {
     totalScheduled: number,
     totalQueued: number,
@@ -160,7 +160,7 @@ function runChargingScheduler(
 
   const schedule: ChargingSchedule[] = [];
   const chargerAvailability = new Map<string, Date>();
-  const queue: Array<{ vehicle: any, waitTime: number, reason: string }> = [];
+  const queue: Array<{ vehicle: Vehicle, waitTime: number, reason: string }> = [];
 
   // Initialize charger availability
   availableChargers.forEach(charger => {

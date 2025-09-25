@@ -88,7 +88,7 @@ export function SimulationControls({
                   <div className="flex items-center space-x-2">
                     <span>{scenario.name}</span>
                     <Badge
-                      variant={getScenarioColor(key) as any}
+                      variant={getScenarioColor(key) as "default" | "secondary" | "destructive" | "outline"}
                       className="text-xs"
                     >
                       {key.replace("-", " ")}

@@ -148,7 +148,7 @@ export function ChargingQueue({ vehicles }: ChargingQueueProps) {
                           {vehicle.plate}
                         </span>
                         <Badge
-                          variant={getPriorityColor(priority) as any}
+                          variant={getPriorityColor(priority) as "default" | "secondary" | "destructive" | "outline"}
                           className="text-xs"
                         >
                           {priority} priority

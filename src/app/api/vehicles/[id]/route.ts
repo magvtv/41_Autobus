@@ -4,9 +4,10 @@ import { mockVehicles, type Vehicle } from '@/lib/mockData';
 // GET /api/vehicles/[id] - Get specific vehicle
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const vehicleId = params.id;
     const vehicle = mockVehicles.find(v => v.id === vehicleId);
 
@@ -41,9 +42,10 @@ export async function GET(
 // PUT /api/vehicles/[id] - Update vehicle status/location
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const vehicleId = params.id;
     const body = await request.json();
     

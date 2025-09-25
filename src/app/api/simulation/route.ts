@@ -1,6 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mockVehicles, mockChargerStations, mockGridNodes, scenarios, type Vehicle, type ChargerStation, type GridNode } from '@/lib/mockData';
 
+interface SimulationEvent {
+  timestamp: string;
+  type: string;
+  vehicleId?: string;
+  chargerId?: string;
+  changes?: Partial<Vehicle> | Partial<ChargerStation>;
+  message?: string;
+  data?: Record<string, unknown>;
+}
+
+interface VehicleUpdate {
+  vehicleId: string;
+  timestamp: string;
+  changes: Partial<Vehicle>;
+}
+
+interface ChargerUpdate {
+  chargerId: string;
+  timestamp: string;
+  changes: Partial<ChargerStation>;
+}
+
+interface GridEvent {
+  timestamp: string;
+  type: string;
+  location?: string;
+  description?: string;
+}
+
 // POST /api/simulation - Run simulation scenario
 export async function POST(request: NextRequest) {
   try {
@@ -160,10 +189,10 @@ function simulateTimeStep(
   gridNodes: GridNode[],
   scenario: { name: string; description: string; gridStatus: string; trafficMultiplier: number; activeVehicles: number }
 ) {
-  const events = [];
-  const vehicleUpdates = [];
-  const chargerUpdates = [];
-  const gridEvents = [];
+  const events: SimulationEvent[] = [];
+  const vehicleUpdates: VehicleUpdate[] = [];
+  const chargerUpdates: ChargerUpdate[] = [];
+  const gridEvents: GridEvent[] = [];
   
   // Simulate vehicle movements and status changes
   vehicles.forEach(vehicle => {

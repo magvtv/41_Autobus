@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Vehicle, ChargerStation } from "@/lib/mockData";
+import type L from "leaflet";
 
 interface MapViewProps {
   vehicles: Vehicle[];
@@ -10,8 +11,8 @@ interface MapViewProps {
 
 export function MapView({ vehicles, chargerStations }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const markersRef = useRef<any[]>([]);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -22,7 +23,7 @@ export function MapView({ vehicles, chargerStations }: MapViewProps) {
       // Note: CSS is loaded from CDN in production
 
       // Fix for default markers
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: string })._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl:
           "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
@@ -47,7 +48,7 @@ export function MapView({ vehicles, chargerStations }: MapViewProps) {
 
       // Clear existing markers
       markersRef.current.forEach((marker) => {
-        mapInstanceRef.current.removeLayer(marker);
+        mapInstanceRef.current?.removeLayer(marker);
       });
       markersRef.current = [];
 
@@ -83,7 +84,7 @@ export function MapView({ vehicles, chargerStations }: MapViewProps) {
           {
             icon,
           },
-        ).addTo(mapInstanceRef.current);
+        ).addTo(mapInstanceRef.current!);
 
         const popupContent = `
           <div style="min-width: 200px;">
@@ -132,7 +133,7 @@ export function MapView({ vehicles, chargerStations }: MapViewProps) {
 
         const marker = L.marker([station.location.lat, station.location.lng], {
           icon,
-        }).addTo(mapInstanceRef.current);
+        }).addTo(mapInstanceRef.current!);
 
         const popupContent = `
           <div style="min-width: 220px;">
@@ -164,7 +165,7 @@ export function MapView({ vehicles, chargerStations }: MapViewProps) {
       // Cleanup function
       if (mapInstanceRef.current) {
         markersRef.current.forEach((marker) => {
-          mapInstanceRef.current.removeLayer(marker);
+          mapInstanceRef.current!.removeLayer(marker);
         });
         markersRef.current = [];
       }

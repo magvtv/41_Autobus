@@ -292,7 +292,7 @@ export function InvestorView() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={getPriorityColor(location.priority) as any}
+                          variant={getPriorityColor(location.priority) as "default" | "secondary" | "destructive" | "outline"}
                         >
                           {location.priority}
                         </Badge>
