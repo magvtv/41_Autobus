@@ -86,7 +86,7 @@ export const mockVehicles: Vehicle[] = [
     currentRoute: "CBD → Kasarani",
     driver: "John Mwangi",
     totalTripsToday: 8,
-    revenue: 3200,
+    revenue: 13200,
   },
   {
     id: "KCB-002E",
@@ -99,7 +99,7 @@ export const mockVehicles: Vehicle[] = [
     nextDispatchTimestamp: "2024-01-15T17:00:00Z",
     driver: "Grace Wanjiku",
     totalTripsToday: 6,
-    revenue: 2800,
+    revenue: 28000,
   },
   {
     id: "KCC-003E",
@@ -113,7 +113,7 @@ export const mockVehicles: Vehicle[] = [
     currentRoute: "Charging at Kasarani Station",
     driver: "Peter Kiprotich",
     totalTripsToday: 9,
-    revenue: 3600,
+    revenue: 13600,
   },
   {
     id: "KCD-004D",
@@ -127,7 +127,7 @@ export const mockVehicles: Vehicle[] = [
     currentRoute: "Embakasi → CBD",
     driver: "Mary Nyokabi",
     totalTripsToday: 7,
-    revenue: 2900,
+    revenue: 22900,
   },
   {
     id: "KCE-005E",
@@ -141,7 +141,7 @@ export const mockVehicles: Vehicle[] = [
     currentRoute: "Kibera → Westlands",
     driver: "Samuel Kipchoge",
     totalTripsToday: 5,
-    revenue: 2400,
+    revenue: 12400,
   },
   {
     id: "KCF-006E",
@@ -154,7 +154,7 @@ export const mockVehicles: Vehicle[] = [
     nextDispatchTimestamp: "2024-01-15T17:30:00Z",
     driver: "Elizabeth Wambui",
     totalTripsToday: 6,
-    revenue: 2700,
+    revenue: 20700,
   },
 ];
 
