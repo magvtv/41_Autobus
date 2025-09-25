@@ -1,4 +1,5 @@
 // API client for MatatuMind backend integration
+import type { Vehicle, ChargerStation, GridNode } from './mockData';
 
 const API_BASE = process.env.NODE_ENV === 'production' 
   ? 'https://your-production-api.com/api' 
@@ -59,9 +60,9 @@ export interface RouteOptimizationResponse {
 }
 
 export interface ChargingScheduleRequest {
-  vehicles?: any[];
-  chargers?: any[];
-  gridNodes?: any[];
+  vehicles?: Vehicle[];
+  chargers?: ChargerStation[];
+  gridNodes?: GridNode[];
   gridStatus?: string;
 }
 
@@ -75,7 +76,7 @@ export interface ChargingScheduleResponse {
     priority: 'high' | 'medium' | 'low';
   }>;
   queue: Array<{
-    vehicle: any;
+    vehicle: Vehicle;
     waitTime: number;
     reason: string;
   }>;
@@ -110,14 +111,32 @@ export interface SimulationResponse {
   duration: number;
   timeStep: number;
   result: {
-    events: any[];
-    vehicleUpdates: any[];
-    chargerUpdates: any[];
-    gridEvents: any[];
+    events: Array<{
+      timestamp: string;
+      type: string;
+      description: string;
+      [key: string]: unknown;
+    }>;
+    vehicleUpdates: Array<{
+      vehicleId: string;
+      timestamp: string;
+      changes: Partial<Vehicle>;
+    }>;
+    chargerUpdates: Array<{
+      chargerId: string;
+      timestamp: string;
+      changes: Partial<ChargerStation>;
+    }>;
+    gridEvents: Array<{
+      timestamp: string;
+      type: string;
+      description: string;
+      location?: string;
+    }>;
     finalState: {
-      vehicles: any[];
-      chargers: any[];
-      gridNodes: any[];
+      vehicles: Vehicle[];
+      chargers: ChargerStation[];
+      gridNodes: GridNode[];
     };
   };
   summary: {
@@ -177,7 +196,7 @@ export async function runSimulation(request: SimulationRequest = {}): Promise<Ap
   return response.json();
 }
 
-export async function getVehicles(): Promise<ApiResponse<any[]>> {
+export async function getVehicles(): Promise<ApiResponse<Vehicle[]>> {
   const response = await fetch(`${API_BASE}/vehicles`);
 
   if (!response.ok) {
@@ -187,7 +206,7 @@ export async function getVehicles(): Promise<ApiResponse<any[]>> {
   return response.json();
 }
 
-export async function getChargers(): Promise<ApiResponse<any[]>> {
+export async function getChargers(): Promise<ApiResponse<ChargerStation[]>> {
   const response = await fetch(`${API_BASE}/chargers`);
 
   if (!response.ok) {
@@ -197,7 +216,15 @@ export async function getChargers(): Promise<ApiResponse<any[]>> {
   return response.json();
 }
 
-export async function getFleetStats(): Promise<ApiResponse<any>> {
+export async function getFleetStats(): Promise<ApiResponse<{
+  totalVehicles: number;
+  evVehicles: number;
+  dieselVehicles: number;
+  activeVehicles: number;
+  chargingVehicles: number;
+  totalRevenue: number;
+  avgSoc: number;
+}>> {
   const response = await fetch(`${API_BASE}/fleet/stats`);
 
   if (!response.ok) {
@@ -207,7 +234,16 @@ export async function getFleetStats(): Promise<ApiResponse<any>> {
   return response.json();
 }
 
-export async function getSimulationScenarios(): Promise<ApiResponse<any>> {
+export async function getSimulationScenarios(): Promise<ApiResponse<{
+  scenarios: Array<{
+    id: string;
+    name: string;
+    description: string;
+    gridStatus: string;
+    trafficMultiplier: number;
+    activeVehicles: number;
+  }>;
+}>> {
   const response = await fetch(`${API_BASE}/simulation`);
 
   if (!response.ok) {
