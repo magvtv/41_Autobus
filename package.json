@@ -4,6 +4,12 @@
     "private": true,
     "scripts": {
         "dev": "next dev -H 0.0.0.0 --turbopack",
+        "dev:clean": "./scripts/dev/dev-clean.sh clean-start",
+        "dev:stable": "./scripts/dev/dev-clean.sh start-stable",
+        "dev:kill": "./scripts/dev/dev-clean.sh kill",
+        "dev:reset": "./scripts/dev/dev-clean.sh clean",
+        "dev:info": "./scripts/dev/dev-clean.sh info",
+        "dev:mjs": "node ./scripts/dev/dev-manager.mjs clean-start",
         "build": "next build",
         "start": "next start",
         "lint": "npx tsc --noEmit && next lint",
