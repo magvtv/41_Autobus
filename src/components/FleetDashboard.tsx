@@ -48,6 +48,8 @@ import {
   Battery,
   Car,
   MapPin,
+  Sun,
+  Wind,
   Zap,
   Clock,
   TrendingUp,
@@ -78,6 +80,11 @@ export function FleetDashboard() {
   );
   const [chargingSchedule, setChargingSchedule] = useState<ChargingScheduleResponse | null>(null);
   const [useRealAPI, setUseRealAPI] = useState(false);
+  const [gridAwareness, setGridAwareness] = useState({
+    renewableUtilization: { solarUtilization: 0, windUtilization: 0, renewablePercentage: 0, estimatedSavings: 0 },
+    gridOptimization: { peakLoadReduction: 0, offPeakUtilization: 0, gridStabilityScore: 0 },
+    costSavings: { renewableSavings: 0, peakAvoidanceSavings: 0, totalMonthlySavings: 0 }
+  });
 
   const getStatusColor = (status: Vehicle["status"]) => {
     switch (status) {
@@ -125,11 +132,21 @@ export function FleetDashboard() {
         const response = await runChargingScheduler({
           vehicles,
           chargers,
-          gridStatus: selectedScenario === 'rush-hour-brownout' ? 'brownout' : 'normal'
+          gridStatus: selectedScenario === 'rush-hour-brownout' ? 'brownout' : 'normal',
+          includeRenewableEnergy: true
         });
 
         if (response.success) {
           setChargingSchedule(response.data);
+          
+          // Update grid awareness data
+          if (response.data.renewableEnergyUtilization && response.data.gridLoadOptimization && response.data.costSavings) {
+            setGridAwareness({
+              renewableUtilization: response.data.renewableEnergyUtilization,
+              gridOptimization: response.data.gridLoadOptimization,
+              costSavings: response.data.costSavings
+            });
+          }
           
           // Update vehicles based on real schedule
           const updatedVehicles = vehicles.map((vehicle) => {
@@ -346,6 +363,63 @@ export function FleetDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Grid Awareness Metrics */}
+      {gridAwareness.renewableUtilization.renewablePercentage > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Solar Utilization</CardTitle>
+              <Sun className="h-4 w-4 text-yellow-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-600">
+                {gridAwareness.renewableUtilization.solarUtilization}%
+              </div>
+              <p className="text-xs text-muted-foreground">Current solar usage</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Wind Utilization</CardTitle>
+              <Wind className="h-4 w-4 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">
+                {gridAwareness.renewableUtilization.windUtilization}%
+              </div>
+              <p className="text-xs text-muted-foreground">Current wind usage</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Grid Stability</CardTitle>
+              <Zap className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                {gridAwareness.gridOptimization.gridStabilityScore}%
+              </div>
+              <p className="text-xs text-muted-foreground">Stability score</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Cost Savings</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                KSh {gridAwareness.costSavings.totalMonthlySavings.toLocaleString()}
+              </div>
+              <p className="text-xs text-muted-foreground">Monthly savings</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Control Panel */}
       <Card>
