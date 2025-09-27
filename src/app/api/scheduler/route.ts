@@ -11,9 +11,20 @@ export async function POST(request: NextRequest) {
     const chargers = body.chargers || mockChargerStations;
     const gridNodes = body.gridNodes || mockGridNodes;
     const gridStatus = body.gridStatus || 'normal';
+    const includeRenewableEnergy = body.includeRenewableEnergy || true;
 
-    // Run the charging scheduler algorithm
-    const schedulerResult = runChargingScheduler(vehicles, chargers, gridNodes, gridStatus);
+    // Get renewable energy generation data
+    const renewableEnergyData = includeRenewableEnergy ? 
+      getRenewableEnergyGeneration() : null;
+
+    // Run the charging scheduler algorithm with grid awareness
+    const schedulerResult = runChargingScheduler(
+      vehicles, 
+      chargers, 
+      gridNodes, 
+      gridStatus, 
+      renewableEnergyData
+    );
 
     return NextResponse.json({
       success: true,
@@ -37,7 +48,11 @@ export async function POST(request: NextRequest) {
           totalQueued: schedulerResult.summary.totalQueued,
           criticalVehiclesScheduled: schedulerResult.summary.criticalVehiclesScheduled,
           criticalVehiclesQueued: schedulerResult.summary.criticalVehiclesQueued,
-          averageWaitTime: schedulerResult.summary.averageWaitTime
+          averageWaitTime: schedulerResult.summary.averageWaitTime,
+          // Enhanced grid awareness metrics
+          renewableEnergyUtilization: schedulerResult.renewableEnergyUtilization,
+          gridLoadOptimization: schedulerResult.gridLoadOptimization,
+          costSavings: schedulerResult.costSavings
         }
       },
       timestamp: new Date().toISOString()
@@ -56,12 +71,37 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Charging Scheduler Algorithm Implementation
+// Renewable Energy Generation Data Interface
+interface RenewableEnergyData {
+  solar: {
+    currentGeneration: number; // kW
+    peakGeneration: number; // kW
+    efficiency: number; // 0-1
+  };
+  wind: {
+    currentGeneration: number; // kW
+    peakGeneration: number; // kW
+    efficiency: number; // 0-1
+  };
+  gridMix: {
+    renewablePercentage: number; // 0-100
+    fossilFuelPercentage: number; // 0-100
+    costPerKwh: number; // KSh
+  };
+  timeOfDay: {
+    hour: number;
+    isPeakHours: boolean;
+    isOffPeakHours: boolean;
+  };
+}
+
+// Charging Scheduler Algorithm Implementation with Grid Awareness
 function runChargingScheduler(
   vehicles: Vehicle[], 
   chargers: ChargerStation[], 
   gridNodes: GridNode[], 
-  gridStatus: string
+  gridStatus: string,
+  renewableEnergyData?: RenewableEnergyData | null
 ): { 
   schedule: ChargingSchedule[], 
   queue: Array<{ vehicle: Vehicle, waitTime: number, reason: string }>,
@@ -71,6 +111,22 @@ function runChargingScheduler(
     criticalVehiclesScheduled: number,
     criticalVehiclesQueued: number,
     averageWaitTime: number
+  },
+  renewableEnergyUtilization: {
+    solarUtilization: number;
+    windUtilization: number;
+    renewablePercentage: number;
+    estimatedSavings: number;
+  },
+  gridLoadOptimization: {
+    peakLoadReduction: number;
+    offPeakUtilization: number;
+    gridStabilityScore: number;
+  },
+  costSavings: {
+    renewableSavings: number;
+    peakAvoidanceSavings: number;
+    totalMonthlySavings: number;
   }
 } {
   
@@ -96,6 +152,22 @@ function runChargingScheduler(
         criticalVehiclesScheduled: 0,
         criticalVehiclesQueued: 0,
         averageWaitTime: 0
+      },
+      renewableEnergyUtilization: {
+        solarUtilization: 0,
+        windUtilization: 0,
+        renewablePercentage: 0,
+        estimatedSavings: 0
+      },
+      gridLoadOptimization: {
+        peakLoadReduction: 0,
+        offPeakUtilization: 0,
+        gridStabilityScore: 0
+      },
+      costSavings: {
+        renewableSavings: 0,
+        peakAvoidanceSavings: 0,
+        totalMonthlySavings: 0
       }
     };
   }
@@ -220,6 +292,26 @@ function runChargingScheduler(
     }
   }
 
+  // Calculate renewable energy utilization metrics
+  const renewableEnergyUtilization = calculateRenewableEnergyUtilization(
+    schedule, 
+    renewableEnergyData
+  );
+  
+  // Calculate grid load optimization metrics
+  const gridLoadOptimization = calculateGridLoadOptimization(
+    schedule, 
+    gridStatus,
+    renewableEnergyData
+  );
+  
+  // Calculate cost savings
+  const costSavings = calculateCostSavings(
+    schedule, 
+    renewableEnergyData, 
+    gridLoadOptimization
+  );
+
   return {
     schedule,
     queue,
@@ -234,7 +326,10 @@ function runChargingScheduler(
       ).length,
       averageWaitTime: queue.length > 0 ? 
         Math.round(queue.reduce((sum, q) => sum + q.waitTime, 0) / queue.length) : 0
-    }
+    },
+    renewableEnergyUtilization,
+    gridLoadOptimization,
+    costSavings
   };
 }
 
@@ -304,4 +399,167 @@ function calculateQueueWaitTime(
   const waitTimeMinutes = Math.max(0, (earliestAvailable - currentTime) / (1000 * 60));
   
   return Math.round(waitTimeMinutes);
+}
+
+// Get renewable energy generation data (simulated)
+function getRenewableEnergyGeneration(): RenewableEnergyData {
+  const currentHour = new Date().getHours();
+  
+  // Simulate solar generation (peak at midday)
+  const solarGeneration = Math.max(0, Math.sin((currentHour - 6) * Math.PI / 12) * 100);
+  
+  // Simulate wind generation (more variable)
+  const windGeneration = 30 + Math.random() * 40; // 30-70 kW
+  
+  // Determine time of day characteristics
+  const isPeakHours = currentHour >= 18 && currentHour <= 22; // Evening peak
+  const isOffPeakHours = currentHour >= 23 || currentHour <= 6; // Night/early morning
+  
+  // Calculate grid mix based on time and generation
+  const renewablePercentage = Math.min(100, (solarGeneration + windGeneration) / 2);
+  const fossilFuelPercentage = 100 - renewablePercentage;
+  
+  // Dynamic pricing based on grid conditions
+  const baseCost = 25; // KSh per kWh
+  const costPerKwh = isPeakHours ? baseCost * 1.5 : 
+                    isOffPeakHours ? baseCost * 0.7 : baseCost;
+  
+  return {
+    solar: {
+      currentGeneration: Math.round(solarGeneration),
+      peakGeneration: 100,
+      efficiency: solarGeneration / 100
+    },
+    wind: {
+      currentGeneration: Math.round(windGeneration),
+      peakGeneration: 70,
+      efficiency: windGeneration / 70
+    },
+    gridMix: {
+      renewablePercentage: Math.round(renewablePercentage),
+      fossilFuelPercentage: Math.round(fossilFuelPercentage),
+      costPerKwh: Math.round(costPerKwh * 100) / 100
+    },
+    timeOfDay: {
+      hour: currentHour,
+      isPeakHours,
+      isOffPeakHours
+    }
+  };
+}
+
+// Calculate renewable energy utilization metrics
+function calculateRenewableEnergyUtilization(
+  schedule: ChargingSchedule[], 
+  renewableEnergyData?: RenewableEnergyData | null
+) {
+  if (!renewableEnergyData) {
+    return {
+      solarUtilization: 0,
+      windUtilization: 0,
+      renewablePercentage: 0,
+      estimatedSavings: 0
+    };
+  }
+  
+  // Calculate total energy scheduled
+  const totalEnergyScheduled = schedule.reduce((sum, s) => sum + s.expectedEnergyKwh, 0);
+  
+  // Calculate renewable energy utilization
+  const solarUtilization = Math.min(100, (totalEnergyScheduled / renewableEnergyData.solar.currentGeneration) * 100);
+  const windUtilization = Math.min(100, (totalEnergyScheduled / renewableEnergyData.wind.currentGeneration) * 100);
+  
+  // Calculate estimated savings from renewable energy
+  const renewableSavingsPerKwh = 5; // KSh saved per kWh from renewable vs fossil
+  const estimatedSavings = totalEnergyScheduled * renewableSavingsPerKwh;
+  
+  return {
+    solarUtilization: Math.round(solarUtilization),
+    windUtilization: Math.round(windUtilization),
+    renewablePercentage: renewableEnergyData.gridMix.renewablePercentage,
+    estimatedSavings: Math.round(estimatedSavings)
+  };
+}
+
+// Calculate grid load optimization metrics
+function calculateGridLoadOptimization(
+  schedule: ChargingSchedule[], 
+  gridStatus: string,
+  renewableEnergyData?: RenewableEnergyData | null
+) {
+  if (!renewableEnergyData) {
+    return {
+      peakLoadReduction: 0,
+      offPeakUtilization: 0,
+      gridStabilityScore: 0
+    };
+  }
+  
+  // Calculate peak load reduction
+  const peakLoadReduction = renewableEnergyData.timeOfDay.isPeakHours ? 
+    Math.min(50, schedule.length * 10) : 0; // 10% reduction per scheduled vehicle during peak
+  
+  // Calculate off-peak utilization
+  const offPeakUtilization = renewableEnergyData.timeOfDay.isOffPeakHours ? 
+    Math.min(100, (schedule.length / 5) * 100) : 0; // Utilization percentage during off-peak
+  
+  // Calculate grid stability score
+  let gridStabilityScore = 50; // Base score
+  
+  if (renewableEnergyData.gridMix.renewablePercentage > 50) {
+    gridStabilityScore += 20; // High renewable percentage improves stability
+  }
+  
+  if (renewableEnergyData.timeOfDay.isOffPeakHours) {
+    gridStabilityScore += 15; // Off-peak charging improves stability
+  }
+  
+  if (gridStatus === 'brownout') {
+    gridStabilityScore -= 30; // Brownout reduces stability
+  }
+  
+  gridStabilityScore = Math.max(0, Math.min(100, gridStabilityScore));
+  
+  return {
+    peakLoadReduction: Math.round(peakLoadReduction),
+    offPeakUtilization: Math.round(offPeakUtilization),
+    gridStabilityScore: Math.round(gridStabilityScore)
+  };
+}
+
+// Calculate cost savings from grid-aware scheduling
+function calculateCostSavings(
+  schedule: ChargingSchedule[], 
+  renewableEnergyData?: RenewableEnergyData | null,
+  gridLoadOptimization?: {
+    peakLoadReduction: number;
+    offPeakUtilization: number;
+    gridStabilityScore: number;
+  } | null
+) {
+  if (!renewableEnergyData) {
+    return {
+      renewableSavings: 0,
+      peakAvoidanceSavings: 0,
+      totalMonthlySavings: 0
+    };
+  }
+  
+  // Calculate renewable energy savings
+  const totalEnergyScheduled = schedule.reduce((sum, s) => sum + s.expectedEnergyKwh, 0);
+  const renewableSavings = totalEnergyScheduled * renewableEnergyData.gridMix.renewablePercentage / 100 * 5; // 5 KSh per kWh
+  
+  // Calculate peak avoidance savings
+  const peakAvoidanceSavings = renewableEnergyData.timeOfDay.isOffPeakHours ? 
+    totalEnergyScheduled * 8 : 0; // 8 KSh per kWh saved during off-peak
+  
+  // Calculate total monthly savings (extrapolate from current schedule)
+  const dailySavings = renewableSavings + peakAvoidanceSavings;
+  const totalMonthlySavings = dailySavings * 30;
+  
+  return {
+    renewableSavings: Math.round(renewableSavings),
+    peakAvoidanceSavings: Math.round(peakAvoidanceSavings),
+    totalMonthlySavings: Math.round(totalMonthlySavings)
+  };
 }
