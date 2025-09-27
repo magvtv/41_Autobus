@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       : generateHighTrafficLocations();
 
     // Analyze each candidate location
-    const analyses = locationsToAnalyze.map(location => 
+    const analyses = locationsToAnalyze.map((location: CandidateLocation) => 
       analyzeStationPlacement(location, timeHorizon, includeTrafficData)
     );
 
@@ -273,7 +273,12 @@ function calculateProjectedUtilization(location: CandidateLocation, includeTraff
 }
 
 // Calculate ROI metrics
-function calculateROI(location: CandidateLocation, utilization: any, timeHorizon: number) {
+function calculateROI(location: CandidateLocation, utilization: {
+  projectedDailySessions: number;
+  peakHourUtilization: number;
+  averageSessionDuration: number;
+  monthlyEnergySold: number;
+}, timeHorizon: number) {
   // Investment costs
   const landCost = location.area === 'CBD' ? 5000000 : 
                    location.area === 'Westlands' ? 4000000 : 3000000; // KSh
@@ -317,7 +322,12 @@ function calculateROI(location: CandidateLocation, utilization: any, timeHorizon
 }
 
 // Calculate impact metrics
-function calculateImpact(location: CandidateLocation, utilization: any) {
+function calculateImpact(location: CandidateLocation, utilization: {
+  projectedDailySessions: number;
+  peakHourUtilization: number;
+  averageSessionDuration: number;
+  monthlyEnergySold: number;
+}) {
   // Vehicles served (assuming 2 sessions per vehicle per day)
   const vehiclesServed = Math.round(utilization.projectedDailySessions / 2);
   
@@ -369,7 +379,12 @@ function calculateFeasibility(location: CandidateLocation) {
 }
 
 // Assess risks
-function assessRisks(location: CandidateLocation, utilization: any): StationPlacementAnalysis['risk'] {
+function assessRisks(location: CandidateLocation, utilization: {
+  projectedDailySessions: number;
+  peakHourUtilization: number;
+  averageSessionDuration: number;
+  monthlyEnergySold: number;
+}): StationPlacementAnalysis['risk'] {
   // Competition risk (based on existing stations nearby)
   const competitionRisk = location.area === 'CBD' ? 'high' : 
                          location.area === 'Westlands' ? 'medium' : 'low';
@@ -400,7 +415,13 @@ function assessRisks(location: CandidateLocation, utilization: any): StationPlac
 }
 
 // Calculate overall score
-function calculateOverallScore(roi: any, utilization: any, impact: any, feasibility: any, risk: any): number {
+function calculateOverallScore(
+  roi: { internalRateOfReturn: number },
+  utilization: { projectedDailySessions: number },
+  impact: { vehiclesServed: number },
+  feasibility: { estimatedTimeline: number },
+  risk: { overallRisk: 'low' | 'medium' | 'high' }
+): number {
   // Weighted scoring system
   const roiScore = Math.min(100, (roi.internalRateOfReturn / 20) * 100); // 20% IRR = 100 points
   const utilizationScore = Math.min(100, (utilization.projectedDailySessions / 50) * 100); // 50 sessions = 100 points
