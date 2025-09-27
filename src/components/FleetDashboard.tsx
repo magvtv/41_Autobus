@@ -140,11 +140,11 @@ export function FleetDashboard() {
           setChargingSchedule(response.data);
           
           // Update grid awareness data
-          if (response.data.renewableEnergyUtilization && response.data.gridLoadOptimization && response.data.costSavings) {
+          if (response.data.summary.renewableEnergyUtilization && response.data.summary.gridLoadOptimization && response.data.summary.costSavings) {
             setGridAwareness({
-              renewableUtilization: response.data.renewableEnergyUtilization,
-              gridOptimization: response.data.gridLoadOptimization,
-              costSavings: response.data.costSavings
+              renewableUtilization: response.data.summary.renewableEnergyUtilization,
+              gridOptimization: response.data.summary.gridLoadOptimization,
+              costSavings: response.data.summary.costSavings
             });
           }
           
