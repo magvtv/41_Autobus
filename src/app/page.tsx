@@ -4,6 +4,8 @@ import { useState } from "react";
 import { FleetDashboard } from "@/components/FleetDashboard";
 import { DriverView } from "@/components/DriverView";
 import { InvestorView } from "@/components/InvestorView";
+import { BatteryHealthMonitor } from "@/components/BatteryHealthMonitor";
+import { StationPlacementDemo } from "@/components/StationPlacementDemo";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -12,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Car, MapPin, TrendingUp, Zap } from "lucide-react";
+import { Car, MapPin, TrendingUp, Zap, Battery, Building2 } from "lucide-react";
 
 export default function Home() {
   return (
@@ -36,9 +38,9 @@ export default function Home() {
             <div className="flex items-center space-x-4 text-sm text-muted-foreground">
               <div className="flex items-center space-x-1">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>Live Demo</span>
+                <span>Nairobi Fleet Operations</span>
+                {/* <span>Live Demo</span> */}
               </div>
-              <span>Nairobi Fleet Operations</span>
             </div>
           </div>
         </div>
@@ -46,7 +48,7 @@ export default function Home() {
 
       <main className="container mx-auto px-4 py-6">
         <Tabs defaultValue="fleet" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="fleet" className="flex items-center space-x-2">
               <Car className="w-4 h-4" />
               <span>Fleet Manager</span>
@@ -54,6 +56,14 @@ export default function Home() {
             <TabsTrigger value="driver" className="flex items-center space-x-2">
               <MapPin className="w-4 h-4" />
               <span>Driver View</span>
+            </TabsTrigger>
+            <TabsTrigger value="battery" className="flex items-center space-x-2">
+              <Battery className="w-4 h-4" />
+              <span>Battery Health</span>
+            </TabsTrigger>
+            <TabsTrigger value="stations" className="flex items-center space-x-2">
+              <Building2 className="w-4 h-4" />
+              <span>Station Placement</span>
             </TabsTrigger>
             <TabsTrigger
               value="investor"
@@ -70,6 +80,14 @@ export default function Home() {
 
           <TabsContent value="driver" className="space-y-6">
             <DriverView />
+          </TabsContent>
+
+          <TabsContent value="battery" className="space-y-6">
+            <BatteryHealthMonitor />
+          </TabsContent>
+
+          <TabsContent value="stations" className="space-y-6">
+            <StationPlacementDemo />
           </TabsContent>
 
           <TabsContent value="investor" className="space-y-6">
