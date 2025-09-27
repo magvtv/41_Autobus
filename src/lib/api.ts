@@ -64,6 +64,7 @@ export interface ChargingScheduleRequest {
   chargers?: ChargerStation[];
   gridNodes?: GridNode[];
   gridStatus?: string;
+  includeRenewableEnergy?: boolean;
 }
 
 export interface ChargingScheduleResponse {
@@ -91,6 +92,22 @@ export interface ChargingScheduleResponse {
     criticalVehiclesScheduled: number;
     criticalVehiclesQueued: number;
     averageWaitTime: number;
+    renewableEnergyUtilization?: {
+      solarUtilization: number;
+      windUtilization: number;
+      renewablePercentage: number;
+      estimatedSavings: number;
+    };
+    gridLoadOptimization?: {
+      peakLoadReduction: number;
+      offPeakUtilization: number;
+      gridStabilityScore: number;
+    };
+    costSavings?: {
+      renewableSavings: number;
+      peakAvoidanceSavings: number;
+      totalMonthlySavings: number;
+    };
   };
 }
 
